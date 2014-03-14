@@ -45,16 +45,11 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
   self.resultsViewController = self.splitViewController.viewControllers[1];
   
   @weakify(self)
-  [[self.searchText.rac_textSignal
-    map:^id(NSString *text) {
-      return [self isValidSearchText:text] ?
-        [UIColor whiteColor] : [UIColor yellowColor];
-    }]
-    subscribeNext:^(UIColor *color) {
-      @strongify(self)
-      self.searchText.backgroundColor = color;
-    }];
-  
+  RAC(self, searchText.backgroundColor) = [self.searchText.rac_textSignal map:^(NSString *text) {
+    return [self isValidSearchText:text] ?
+      [UIColor whiteColor] : [UIColor yellowColor];
+  }];
+
   self.accountStore = [[ACAccountStore alloc] init];
   self.twitterAccountType = [self.accountStore accountTypeWithAccountTypeIdentifier:ACAccountTypeIdentifierTwitter];
 
