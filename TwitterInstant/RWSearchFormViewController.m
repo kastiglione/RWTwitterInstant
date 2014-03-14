@@ -16,9 +16,7 @@
 #import "NSArray+LinqExtensions.h"
 
 typedef NS_ENUM(NSInteger, RWTwitterInstantError) {
-  RWTwitterInstantErrorAccessDenied,
   RWTwitterInstantErrorNoTwitterAccounts,
-  RWTwitterInstantErrorInvalidResponse
 };
 
 static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
@@ -84,24 +82,18 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
 }
 
 - (RACSignal *)requestAccessToTwitterSignal {
-  
-  // 1 - define an error
-  NSError *accessError = [NSError errorWithDomain:RWTwitterInstantDomain
-                                             code:RWTwitterInstantErrorAccessDenied
-                                         userInfo:nil];
-  
-  // 2 - create the signal
+  // 1 - create the signal
   @weakify(self)
   return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
-    // 3 - request access to twitter
+    // 2 - request access to twitter
     @strongify(self)
     [self.accountStore
        requestAccessToAccountsWithType:self.twitterAccountType
          options:nil
       completion:^(BOOL granted, NSError *error) {
-          // 4 - handle the response
+          // 3 - handle the response
           if (!granted) {
-            [subscriber sendError:accessError];
+            [subscriber sendError:error];
           } else {
             [subscriber sendCompleted];
           }
@@ -128,10 +120,6 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
                                                  code:RWTwitterInstantErrorNoTwitterAccounts
                                              userInfo:nil];
   
-  NSError *invalidResponseError = [NSError errorWithDomain:RWTwitterInstantDomain
-                                                      code:RWTwitterInstantErrorInvalidResponse
-                                                  userInfo:nil];
-  
   // 2 - create the signal block
   @weakify(self)
   void (^signalBlock)(RACSubject *subject) = ^(RACSubject *subject) {
@@ -150,7 +138,7 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
     
     // 5 - perform the request
     [request performRequestWithHandler: ^(NSData *responseData, NSHTTPURLResponse *urlResponse, NSError *error) {
-      if (urlResponse.statusCode == 200) {
+      if (urlResponse.statusCode == 200 && error == nil) {
         
         // 6 - on success, parse the response
         NSDictionary *timelineData = [NSJSONSerialization JSONObjectWithData:responseData
@@ -161,7 +149,7 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
       }
       else {
         // 7 - send an error on failure
-        [subject sendError:invalidResponseError];
+        [subject sendError:error];
       }
     }];
   };
