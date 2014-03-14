@@ -65,12 +65,10 @@
   
   RACScheduler *scheduler = [RACScheduler schedulerWithPriority:RACSchedulerPriorityBackground];
   
-  return [[RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+  return [[RACSignal defer:{
     NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:imageUrl]];
     UIImage *image = [UIImage imageWithData:data];
-    [subscriber sendNext:image];
-    [subscriber sendCompleted];
-    return nil;
+    return [RACSignal return:image];
   }] subscribeOn:scheduler];
   
 }
