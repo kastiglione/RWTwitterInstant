@@ -52,17 +52,18 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
   self.accountStore = [[ACAccountStore alloc] init];
   self.twitterAccountType = [self.accountStore accountTypeWithAccountTypeIdentifier:ACAccountTypeIdentifierTwitter];
 
-  [[[[[[[self requestAccessToTwitterSignal]
+  [[[[[[[[self requestAccessToTwitterSignal]
     concat:self.searchText.rac_textSignal]
     filter:^BOOL(NSString *text) {
       @strongify(self)
       return [self isValidSearchText:text];
     }]
     throttle:0.5]
-    flattenMap:^RACStream *(NSString *text) {
+    map:^(NSString *text) {
       @strongify(self)
       return [self signalForSearchWithText:text];
     }]
+    switchToLatest]
     deliverOn:[RACScheduler mainThreadScheduler]]
     subscribeNext:^(NSDictionary *jsonSearchResult) {
       NSArray *statuses = jsonSearchResult[@"statuses"];
