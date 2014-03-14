@@ -61,10 +61,7 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
   self.twitterAccountType = [self.accountStore accountTypeWithAccountTypeIdentifier:ACAccountTypeIdentifierTwitter];
 
   [[[[[[[self requestAccessToTwitterSignal]
-    then:^RACSignal *{
-      @strongify(self)
-      return self.searchText.rac_textSignal;
-    }]
+    concat:self.searchText.rac_textSignal]
     filter:^BOOL(NSString *text) {
       @strongify(self)
       return [self isValidSearchText:text];
@@ -106,7 +103,6 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
           if (!granted) {
             [subscriber sendError:accessError];
           } else {
-            [subscriber sendNext:nil];
             [subscriber sendCompleted];
           }
         }];
