@@ -117,7 +117,7 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
   
   // 2 - create the signal block
   @weakify(self)
-  void (^signalBlock)(RACSubject *subject) = ^(RACSubject *subject) {
+  return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
     @strongify(self);
     
     // 3 - create the request
@@ -126,7 +126,7 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
     // 4 - supply a twitter account
     NSArray *twitterAccounts = [self.accountStore accountsWithAccountType:self.twitterAccountType];
     if (twitterAccounts.count == 0) {
-      [subject sendError:noAccountsError];
+      [subscriber sendError:noAccountsError];
       return;
     }
     [request setAccount:[twitterAccounts lastObject]];
@@ -139,20 +139,17 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
         NSDictionary *timelineData = [NSJSONSerialization JSONObjectWithData:responseData
                                                                      options:NSJSONReadingAllowFragments
                                                                        error:nil];
-        [subject sendNext:timelineData];
-        [subject sendCompleted];
+        [subscriber sendNext:timelineData];
+        [subscriber sendCompleted];
       }
       else {
         // 7 - send an error on failure
-        [subject sendError:error];
+        [subscriber sendError:error];
       }
     }];
+    
+    return nil;
   };
-  
-  RACSignal *signal = [RACSignal startLazilyWithScheduler:[RACScheduler scheduler]
-                                                    block:signalBlock];
-  
-  return signal;
 }
 
 
