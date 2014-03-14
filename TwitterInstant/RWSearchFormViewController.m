@@ -13,7 +13,6 @@
 #import <Accounts/Accounts.h>
 #import <Social/Social.h>
 #import "RWTweet.h"
-#import "NSArray+LinqExtensions.h"
 
 typedef NS_ENUM(NSInteger, RWTwitterInstantError) {
   RWTwitterInstantErrorNoTwitterAccounts,
@@ -67,9 +66,9 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
     deliverOn:[RACScheduler mainThreadScheduler]]
     subscribeNext:^(NSDictionary *jsonSearchResult) {
       NSArray *statuses = jsonSearchResult[@"statuses"];
-      NSArray *tweets = [statuses linq_select:^id(id tweet) {
+      NSArray *tweets = [statuses.rac_sequence map:^(id tweet) {
         return [RWTweet tweetWithStatus:tweet];
-      }];
+      }].array;
       [self.resultsViewController displayTweets:tweets];
     } error:^(NSError *error) {
       NSLog(@"An error occurred: %@", error);
