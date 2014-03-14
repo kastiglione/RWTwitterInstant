@@ -45,6 +45,7 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
   
   @weakify(self)
   RAC(self, searchText.backgroundColor) = [self.searchText.rac_textSignal map:^(NSString *text) {
+    @strongify(self)
     return [self isValidSearchText:text] ?
       [UIColor whiteColor] : [UIColor yellowColor];
   }];
@@ -66,6 +67,7 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
     switchToLatest]
     deliverOn:[RACScheduler mainThreadScheduler]]
     subscribeNext:^(NSArray *tweets) {
+      @strongify(self)
       [self.resultsViewController displayTweets:tweets];
     } error:^(NSError *error) {
       NSLog(@"An error occurred: %@", error);
