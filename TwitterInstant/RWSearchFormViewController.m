@@ -65,11 +65,7 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
     }]
     switchToLatest]
     deliverOn:[RACScheduler mainThreadScheduler]]
-    subscribeNext:^(NSDictionary *jsonSearchResult) {
-      NSArray *statuses = jsonSearchResult[@"statuses"];
-      NSArray *tweets = [statuses.rac_sequence map:^(id tweet) {
-        return [RWTweet tweetWithStatus:tweet];
-      }].array;
+    subscribeNext:^(NSArray *tweets) {
       [self.resultsViewController displayTweets:tweets];
     } error:^(NSError *error) {
       NSLog(@"An error occurred: %@", error);
@@ -139,7 +135,12 @@ static NSString * const RWTwitterInstantDomain = @"TwitterInstant";
         NSDictionary *timelineData = [NSJSONSerialization JSONObjectWithData:responseData
                                                                      options:NSJSONReadingAllowFragments
                                                                        error:nil];
-        [subscriber sendNext:timelineData];
+        NSArray *statuses = timelineData[@"statuses"];
+        NSArray *tweets = [statuses.rac_sequence map:^(id tweet) {
+          return [RWTweet tweetWithStatus:tweet];
+        }].array;
+                                                                       
+        [subscriber sendNext:tweets];
         [subscriber sendCompleted];
       }
       else {
